@@ -314,201 +314,203 @@ margin-top: 20px;
 
 
             <%-include('../footer');  -%>
-    <script>
-      const daysMapping = {
-  mon: "Monday",
-  tue: "Tuesday",
-  wed: "Wednesday",
-  thu: "Thursday",
-  fri: "Friday",
-  sat: "Saturday",
-  sun: "Sunday"
-};
-      let saveDataTime = {};
-let rowCounter = 1; // Counter to track the row number
-function addnrow(dayPrefix,start="",end="") {
-    rowCounter++; // Increment the counter for unique IDs
-
-    // Create a new row
-    const newRow = `
-        <div class="row mb-2 mt-2">
-            <div class="col-md-2">
-            
-            </div>
-            <div class="col-4">
-                <label for="${dayPrefix}_open_${rowCounter}" class="form-label">Opens at</label>
-                <input id="${dayPrefix}_open_${rowCounter}" value="${start}" type="time" ${start!==""?"disabled":""} class="form-control input-style">
-            </div>
-            <div class="col-4">
-                <label for="${dayPrefix}_close_${rowCounter}" class="form-label">Closes at</label>
-                <input id="${dayPrefix}_close_${rowCounter}" value="${end}" type="time" ${end!==""?"disabled":""} class="form-control input-style">
-            </div>
-            <div class="col-2 d-flex align-items-center">
-                <button onclick="removeRow(this,'${dayPrefix}')" type="button" class="btn btn-outline-danger remove-slot">🗑</button>
-            </div>
-        </div>`;
-
-    // Append the new row to the parent container
-    const parentContainer = document.getElementById(`${dayPrefix}_container`);
-    parentContainer.insertAdjacentHTML("beforeend", newRow);
-    const inputs = parentContainer.querySelectorAll("input[type='time']");
-    inputs.forEach((input) => {
-      input.addEventListener("input", () => saveDayTime(dayPrefix));
-    });
-}
-
-function closeRow(id){
-  document.getElementById(`${id}_open_1`).closest(".col-4").classList.toggle("hidden");
-  document.getElementById(`${id}_close_1`).closest(".col-4").classList.toggle("hidden");
-  delete saveDataTime[daysMapping[id]];
-  console.log(saveDataTime);
-  
-}
-
-function saveDayTime(day) {
-  const dayContainer = document.getElementById(`${day}_container`);
-  const inputs = dayContainer.querySelectorAll("input[type='time']");
-
-  // Clear the day's data and repopulate it
-  saveDataTime[daysMapping[day]] = [];
-
-  for (let i = 0; i < inputs.length; i += 2) {
-    const start = inputs[i].value;
-    const end = inputs[i + 1]?.value;
-
-    if (start && end) {
-      if (end <= start) {
-        alert(`Invalid time range for ${day}: 'Close at' must be after 'Opens at'.`);
-        return;
-      }
-
-      saveDataTime[daysMapping[day]].push({ start, end });
-    }
-  }
-
-  console.log(`Updated data for ${day}:`, saveDataTime);
-}
-
-
-// Function to remove a specific row
-function removeRow(button,dayPrefix) {
-    button.closest('.row').remove();
-    const parentContainer = document.getElementById(`${dayPrefix}_container`);
-    const inputs = parentContainer.querySelectorAll("input[type='time']");
-    console.log(inputs);
-    
-    inputs.forEach((input) => saveDayTime(dayPrefix));
-}
-
-// Array of day keys, corresponding to your day mapping
-const days = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
-
-// Iterate over each day
-days.forEach((day) => {
-  // Select the container for the day
-  const dayContainer = document.getElementById(`${day}_container`);
-
-  if (dayContainer) {
-    // Add event listeners to all time inputs
-    const inputs = dayContainer.querySelectorAll("input[type='time']");
-    inputs.forEach((input) => {
-      input.addEventListener("input", () => saveDayTime(day));
-    });
-  }
-});
-
-function spliceString(str, start, deleteCount, insert = "") {
-  const strArray = str.split(""); // Convert the string to an array
-  strArray.splice(start, deleteCount, insert); // Perform the splice operation
-  return strArray.join(""); // Join the array back into a string
-}
-
-
-console.log("Event listeners added for all days.");
-
-    function updateQuery(){
-       document.getElementById('query').value=1;
-       $('#mod-btn').prop('disabled', true);   
-       $('input, select').prop('disabled', false);
-       $('#code').prop('readonly', true);
-       document.getElementById('sub-btn').disabled = false;
-     }
-            
-   if('<%= data.id %>'!==''){
-       $('input, select').prop('disabled', true);
-       document.getElementById('sub-btn').disabled = true;
-       document.getElementById('mod-btn').disabled = false;
-       document.getElementById('code').value='<%=data.code%>'
-       document.getElementById('name').value='<%=data.name%>'
-       document.getElementById('qualification').value='<%=data.qualification%>'
-       document.getElementById('speciality').value='<%=data.speciality%>'
-       document.getElementById('email').value='<%=data.email%>'
-       document.getElementById('mobile').value='<%=data.mobile%>'
- 
-       const fetchday = async ()=>{
-        const response = await fetch(`/timeTable?id=<%= data.id %>`);
-        const data = await response.json();
-        console.log(data);
-
-        const days = [];
-        data.dayArray.forEach(d=>{
-          let str = d.dayType.slice(0, 3).toLowerCase();
-          console.log(str);
-          
-          d.timeTable.forEach((t,i)=>{
-            if(i===0){
-              document.getElementById('timeSlot').value = d.slotTiming;
-              document.getElementById(`${str}_open_1`).value = t.start;
-              document.getElementById(`${str}_close_1`).value = t.end;
-            }else{
-              addnrow(str,t.start,t.end);
-            }
-          })
-        })
-        days.forEach(d=>{
-          // const dayContainer = document.getElementById(`${d}_container`);
-          addnrow(d);
-
-        })
-        console.log(days);
-        
-       }
-       fetchday();
-
-       
-     }else{
-     
-       document.getElementById('mod-btn').disabled = true;
-     }
-           </script>
-
             <script>
-                $(document).ready(function () {
-                    console.log("Document is ready");
-                    const formId = '#doctorForm'
-                    $(formId).on('submit', function (event) {
-                        event.preventDefault();
-                        const { isValid, errorMessage } = validateForm(formId);
-                        const errorDivId = '#errordiv';
-
-                        if (isValid) {
-                            const url = '/saveDoctor';
-                            const loadingDiv = '#loadingIndicator';
-                            const formData = new FormData(this);
-
-
-                            for (const [key, value] of formData.entries()) {
-                                console.log(key, value);
-                            }
-                            formData.append("timeTable", JSON.stringify(saveDataTime));
-
-                            saveFormImg(formData, errorDivId, url, loadingDiv);
-                        } else {
-                            $(errorDivId).removeClass('alert-success').addClass('alert-danger').text(errorMessage).show();
-                        }
-                    });
-
-                });
-
-
-            </script>
+                const daysMapping = {
+            mon: "Monday",
+            tue: "Tuesday",
+            wed: "Wednesday",
+            thu: "Thursday",
+            fri: "Friday",
+            sat: "Saturday",
+            sun: "Sunday"
+          };
+                let saveDataTime = {};
+          let rowCounter = 1; // Counter to track the row number
+          function addnrow(dayPrefix,start="",end="") {
+              rowCounter++; // Increment the counter for unique IDs
+          
+              // Create a new row
+              const newRow = `
+                  <div class="row mb-2 mt-2">
+                      <div class="col-md-2">
+                      
+                      </div>
+                      <div class="col-4">
+                          <label for="${dayPrefix}_open_${rowCounter}" class="form-label">Opens at</label>
+                          <input id="${dayPrefix}_open_${rowCounter}" value="${start}" type="time" ${start!==""?"disabled":""} class="form-control input-style">
+                      </div>
+                      <div class="col-4">
+                          <label for="${dayPrefix}_close_${rowCounter}" class="form-label">Closes at</label>
+                          <input id="${dayPrefix}_close_${rowCounter}" value="${end}" type="time" ${end!==""?"disabled":""} class="form-control input-style">
+                      </div>
+                      <div class="col-2 d-flex align-items-center">
+                          <button onclick="removeRow(this,'${dayPrefix}')" type="button" class="btn btn-outline-danger remove-slot">🗑</button>
+                      </div>
+                  </div>`;
+          
+              // Append the new row to the parent container
+              const parentContainer = document.getElementById(`${dayPrefix}_container`);
+              parentContainer.insertAdjacentHTML("beforeend", newRow);
+              const inputs = parentContainer.querySelectorAll("input[type='time']");
+              inputs.forEach((input) => {
+                input.addEventListener("input", () => saveDayTime(dayPrefix));
+              });
+          }
+          
+          function closeRow(id){
+            document.getElementById(`${id}_open_1`).closest(".col-4").classList.toggle("hidden");
+            document.getElementById(`${id}_close_1`).closest(".col-4").classList.toggle("hidden");
+            delete saveDataTime[daysMapping[id]];
+            console.log(saveDataTime);
+            
+          }
+          
+          function saveDayTime(day) {
+            const dayContainer = document.getElementById(`${day}_container`);
+            const inputs = dayContainer.querySelectorAll("input[type='time']");
+          
+            // Clear the day's data and repopulate it
+            saveDataTime[daysMapping[day]] = [];
+          
+            for (let i = 0; i < inputs.length; i += 2) {
+              const start = inputs[i].value;
+              const end = inputs[i + 1]?.value;
+          
+              if (start && end) {
+                if (end <= start) {
+                  alert(`Invalid time range for ${day}: 'Close at' must be after 'Opens at'.`);
+                  return;
+                }
+          
+                saveDataTime[daysMapping[day]].push({ start, end });
+              }
+            }
+          
+            console.log(`Updated data for ${day}:`, saveDataTime);
+          }
+          
+          
+          // Function to remove a specific row
+          function removeRow(button,dayPrefix) {
+              button.closest('.row').remove();
+              const parentContainer = document.getElementById(`${dayPrefix}_container`);
+              const inputs = parentContainer.querySelectorAll("input[type='time']");
+              console.log(inputs);
+              
+              inputs.forEach((input) => saveDayTime(dayPrefix));
+          }
+          
+          // Array of day keys, corresponding to your day mapping
+          const days = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
+          
+          // Iterate over each day
+          days.forEach((day) => {
+            // Select the container for the day
+            const dayContainer = document.getElementById(`${day}_container`);
+          
+            if (dayContainer) {
+              // Add event listeners to all time inputs
+              const inputs = dayContainer.querySelectorAll("input[type='time']");
+              inputs.forEach((input) => {
+                input.addEventListener("input", () => saveDayTime(day));
+              });
+            }
+          });
+          
+          function spliceString(str, start, deleteCount, insert = "") {
+            const strArray = str.split(""); // Convert the string to an array
+            strArray.splice(start, deleteCount, insert); // Perform the splice operation
+            return strArray.join(""); // Join the array back into a string
+          }
+          
+          
+          console.log("Event listeners added for all days.");
+          
+              function updateQuery(){
+                 document.getElementById('query').value=1;
+                 $('#mod-btn').prop('disabled', true);   
+                 $('input, select').prop('disabled', false);
+                 $('#code').prop('readonly', true);
+                 document.getElementById('sub-btn').disabled = false;
+               }
+                      
+             if('<%= data.id %>'!==''){
+                 $('input, select').prop('disabled', true);
+                 document.getElementById('sub-btn').disabled = true;
+                 document.getElementById('mod-btn').disabled = false;
+                 document.getElementById('code').value='<%=data.code%>'
+                 document.getElementById('name').value='<%=data.name%>'
+                 document.getElementById('qualification').value='<%=data.qualification%>'
+                 document.getElementById('speciality').value='<%=data.speciality%>'
+                 document.getElementById('email').value='<%=data.email%>'
+                 document.getElementById('mobile').value='<%=data.mobile%>'
+           
+                 const fetchday = async ()=>{
+                  const response = await fetch(`/timeTable?id=<%= data.id %>`);
+                  const data = await response.json();
+                  console.log(data);
+          
+                  const days = [];
+                  data.dayArray.forEach(d=>{
+                    let str = d.dayType.slice(0, 3).toLowerCase();
+                    console.log(str);
+                    saveDataTime[d.dayType] = d.timeTable;
+                    console.log(saveDataTime);
+                    
+                    
+                    d.timeTable.forEach((t,i)=>{
+                      if(i===0){
+                        document.getElementById('timeSlot').value = d.slotTiming;
+                        document.getElementById(`${str}_open_1`).value = t.start;
+                        document.getElementById(`${str}_close_1`).value = t.end;
+                      }else{
+                        addnrow(str,t.start,t.end);
+                      }
+                    })
+                  })
+                  days.forEach(d=>{
+                    // const dayContainer = document.getElementById(`${d}_container`);
+                    addnrow(d);
+                  })
+                  console.log(days);
+                  
+                 }
+                 fetchday();
+          
+                 
+               }else{
+               
+                 document.getElementById('mod-btn').disabled = true;
+               }
+                     </script>
+          
+                      <script>
+                          $(document).ready(function () {
+                              console.log("Document is ready");
+                              const formId = '#doctorForm'
+                              $(formId).on('submit', function (event) {
+                                  event.preventDefault();
+                                  const { isValid, errorMessage } = validateForm(formId);
+                                  const errorDivId = '#errordiv';
+          
+                                  if (isValid) {
+                                      const url = '/saveDoctor';
+                                      const loadingDiv = '#loadingIndicator';
+                                      const formData = new FormData(this);
+          
+          
+                                      for (const [key, value] of formData.entries()) {
+                                          console.log(key, value);
+                                      }
+                                      formData.append("timeTable", JSON.stringify(saveDataTime));
+          
+                                      saveFormImg(formData, errorDivId, url, loadingDiv);
+                                  } else {
+                                      $(errorDivId).removeClass('alert-success').addClass('alert-danger').text(errorMessage).show();
+                                  }
+                              });
+          
+                          });
+          
+          
+                      </script>

@@ -779,6 +779,8 @@
 
         // Clear existing options
         selectElement.innerHTML = `<option value="">Select</option>`;
+        const now = new Date(); // Get the current date and time
+        const totalMinutes = now.getHours() * 60 + now.getMinutes();
 
         // Loop through each slot range and generate 15-minute intervals
         slotRanges.forEach((range) => {
@@ -799,6 +801,10 @@
             const amPm = currentHour < 12 ? "AM" : "PM";
             const displayHour = currentHour % 12 === 0 ? 12 : currentHour % 12;
             const formattedTime = `${displayHour}:${formattedMinute} ${amPm}`;
+            const givenMinutes =
+              parseInt(formattedHour) * 60 + parseInt(formattedMinute);
+
+            console.log(givenMinutes);
 
             // Create an <option> element
             const option = document.createElement("option");
@@ -811,16 +817,14 @@
               currentMinute = 0;
               currentHour += 1;
             }
-            if (
-              notAvailableSlots.includes(
-                `${formattedHour}:${formattedMinute}:00`
-              )
-            ) {
-              continue;
-            } else {
-              // console.log(notAvailableSlots);
-
-              selectElement.appendChild(option);
+            if (totalMinutes < givenMinutes) {
+              if (
+                !notAvailableSlots.includes(
+                  `${formattedHour}:${formattedMinute}:00`
+                )
+              ) {
+                selectElement.appendChild(option);
+              }
             }
           }
         });
